@@ -1,29 +1,26 @@
 const User = require("../models/user.model");
 const helper = require("../utils/helper.functions");
-const bcrypt = require('bcrypt');
-
+const bcrypt = require("bcrypt");
 
 //register
 const register = async (req, res) => {
   const data = req.body;
-  try{
-  const securePassword = await helper.securePassword(data.password);
-  console.log("secured pwd", securePassword);
-  const userData = await User.create({
-    name: data.name,
-    email: data.email,
-    contactNumber: data.phone,
-    password: securePassword,
-    createdAt: new Date(),
-  });
-res.status(200).json("success");
-  }catch(err){
+  try {
+    const securePassword = await helper.securePassword(data.password);
+    console.log("secured pwd", securePassword);
+    const userData = await User.create({
+      name: data.name,
+      email: data.email,
+      contactNumber: data.phone,
+      password: securePassword,
+      createdAt: new Date(),
+    });
+    res.status(200).json("success");
+  } catch (err) {
     console.log(err);
-    return  res.status(401).json("Error");
+    return res.status(401).json("Error");
   }
-
 };
-
 
 //Login With password
 const passwordLogin = async (req, res) => {
@@ -53,7 +50,20 @@ const passwordLogin = async (req, res) => {
       });
     }
     const token = await helper.tokenGenerator(userData);
-    const userdata = await User.findOne({ email: data.username },{name:1,contactNumber:1,email:1,isIdVerified:1,isPhoneVerified:1,ownsVehicle:1,isAdmin:1,isBlocked:1});
+    const userdata = await User.findOne(
+      { email: data.username },
+      {
+        name: 1,
+        contactNumber: 1,
+        email: 1,
+        isIdVerified: 1,
+        isPhoneVerified: 1,
+        ownsVehicle: 1,
+        isAdmin: 1,
+        isBlocked: 1,
+        otp:1
+      }
+    );
     res.status(200).json({ data: userdata, status: "Success", token: token });
   } catch (err) {
     console.log(err);
@@ -64,53 +74,130 @@ const passwordLogin = async (req, res) => {
 };
 
 const sendOtp = async (req, res) => {
-  
-  if(!req.body.phone ){
-    return res.status(400).json({status:"Error",message:"Body empty",data:""})
+  if (!req.body.phone) {
+    return res
+      .status(400)
+      .json({ status: "Error", message: "Body empty", data: "" });
   }
-  try{
+  try {
     const userData = await User.findOne({ contactNumber: req.body.phone });
-    if(!userData){
-      return res.status(401).json({status:"Error",message:"Not registered",data:""})
+    if (!userData) {
+      return res
+        .status(401)
+        .json({ status: "Error", message: "Not registered", data: "" });
     }
     console.log(userData);
-    const otp =  helper.generateOTP();
+    const otp = helper.generateOTP();
     //const isOtpSend =await helper.sendOtpTOPhone(otp,req.body.phone);
     const otpUpdated = await User.findOneAndUpdate(
       { contactNumber: req.body.phone },
-      { $set: { otp: otp } },{new:true}
+      { $set: { otp: otp } },
+      { new: true }
     );
-    if(!otpUpdated){
-      return res.status(401).json({status:"Error",message:"Something went wrong",data:""})
+    if (!otpUpdated) {
+      return res
+        .status(401)
+        .json({ status: "Error", message: "Something went wrong", data: "" });
     }
-    res.status(200).json({status:"Success",message:"Otp send",data:req.body.phone});
-  }catch(err){
+    res
+      .status(200)
+      .json({ status: "Success", message: "Otp send", data: req.body.phone });
+  } catch (err) {
     console.log(err.message);
-    return  res.status(500).json({status:"Error",message:"Something went wrong",data:""});
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong", data: "" });
   }
 };
-
 
 const authOtp = async (req, res) => {
   console.log(req.body);
   if (!req.body) {
-    return res.status(400).json({ status:"Error",message: "empty body",data:"" });
+    return res
+      .status(400)
+      .json({ status: "Error", message: "empty body", data: "" });
   }
   try {
-    const userData = await User.find({ contactNumber: req.body.phone },{name:1,contactNumber:1,email:1,isIdVerified:1,isPhoneVerified:1,ownsVehicle:1,isAdmin:1,isBlocked:1});
+    const userData = await User.findOne(
+      { contactNumber: req.body.phone },
+      {
+        name: 1,
+        contactNumber: 1,
+        email: 1,
+        isIdVerified: 1,
+        isPhoneVerified: 1,
+        ownsVehicle: 1,
+        isAdmin: 1,
+        isBlocked: 1,
+        otp:1
+      }
+    );
     if (!userData) {
-      return res.status(401).json({ status:"Error",message: "user don't exists",data:"" });
+      return res
+        .status(401)
+        .json({ status: "Error", message: "user don't exists", data: "" });
     }
     console.log(userData);
+    console.log(req.body.otp ,userData.otp)
     if (req.body.otp !== userData.otp) {
-      return res.status(404).json({ status:"Error",message: "Something went wrong",data:"" });
+      return res
+        .status(404)
+        .json({ status: "Error", message: "Something went wrong", data: "" });
     }
     const token = await helper.tokenGenerator(userData);
-    return res.status(200).json({status:"Success", message: "success",data:userData,token:token });
-
+    return res
+      .status(200)
+      .json({
+        status: "Success",
+        message: "success",
+        data: userData,
+        token: token,
+      });
   } catch (err) {
-console.log(err)
-    return res.status(500).json({ message: "Something went wrong" });
+    console.log(err);
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong", data: "" });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  console.log("in reset>>", req.body);
+  const form = req.body.formData;
+  const phone = req.body.phone;
+  try {
+    const userData = await User.findOne({
+      contactNumber: phone,
+      otp: form.otp,
+    });
+    if (!userData) {
+      return res
+        .status(404)
+        .json({ status: "Error", message: "Authorization fails", data: "" });
+    }
+    if (userData.isBlocked) {
+      return res
+        .status(403)
+        .json({ status: "Error", message: "You are blocked", data: "" });
+    }
+    const securePassword = await helper.securePassword(form.password);
+    const resetData = await User.findOneAndUpdate(
+      { contactNumber: phone },
+      { password: securePassword },
+      { new: true }
+    );
+    if (!resetData) {
+      return res
+        .status(500)
+        .json({ status: "Error", message: "Something went wrong", data: "" });
+    }
+    return res
+      .status(200)
+      .json({ status: "Success", message: "password reset", data: "" });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong", data: "" });
   }
 };
 
@@ -119,5 +206,6 @@ module.exports = {
   passwordLogin,
   register,
   sendOtp,
-  authOtp
+  authOtp,
+  resetPassword,
 };

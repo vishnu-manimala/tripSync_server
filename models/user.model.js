@@ -47,7 +47,7 @@ const userSchema = new mongoose.Schema({
     vehicleCategory:[],
     isAdmin:{
         type:Boolean,
-        default:true
+        default:false
     },
     isBlocked:{
         type:Boolean,

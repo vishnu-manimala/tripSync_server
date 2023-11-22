@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const AuthToken =process.env.AuthToken;
 const AccountSID = process.env.AccountSID;
+const  PRIVATE_KEY = process.env.PRIVATE_KEY;
 console.log("AccountSID"+AccountSID+"AuthToken"+AuthToken)
 const twilio = require("twilio")(AccountSID, AuthToken);
 
@@ -17,7 +18,7 @@ const securePassword = async(password)=>{
 
 const tokenGenerator = async(data)=>{
     console.log(data);
-    const PRIVATE_KEY = "ShareYourRIde";
+    
     const token  = jwt.sign({userData:data},PRIVATE_KEY,{expiresIn:'10h'});
     console.log(token);
     return token;

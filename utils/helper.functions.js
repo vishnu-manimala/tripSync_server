@@ -1,9 +1,10 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 const AuthToken =process.env.AuthToken;
 const AccountSID = process.env.AccountSID;
 const  PRIVATE_KEY = process.env.PRIVATE_KEY;
-console.log("AccountSID"+AccountSID+"AuthToken"+AuthToken)
+console.log(process.env.DB_URL+"AccountSID"+AccountSID+"AuthToken"+AuthToken)
 const twilio = require("twilio")(AccountSID, AuthToken);
 
 const securePassword = async(password)=>{

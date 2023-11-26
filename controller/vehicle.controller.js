@@ -7,6 +7,7 @@ const vehicleModel = require("../models/vehicle.model");
 //###########################  full vehicle list retrieval for user #####################################
 const getVehicleList = async (req, res) => {
   try {
+    console.log(req.query)
     const user = req.user.userData;
     console.log("inVehicle list>>", user);
     if (!user) {
@@ -14,7 +15,10 @@ const getVehicleList = async (req, res) => {
       .status(500)
       .json({ status: "Error", message: "Something went wrong",data:'' });
     }
-    const vehicleList = await Vehicle.find({ userId: user._id, isBlocked:false });
+    const page = +req.query.id;
+    const limit = 2;
+    const skip = 2*(page-1);   
+    const vehicleList = await Vehicle.find({ userId: user._id, isBlocked:false }).limit(limit).skip(skip);
     if (!vehicleList) {
       return res
       .status(404)
@@ -139,9 +143,7 @@ const saveRegistrationData = async (req, res) => {
   if (!req.body) {
     return res.status(400).json({ status: "Error", message: "NO body" });
   }
-  console.log("save reg data>> ", req.body);
   const user = req.user.userData;
-  console.log("user>>", user);
   try {
     const reg = {
       registrationNumber: req.body.registrationNumber,
@@ -180,7 +182,9 @@ const saveRegistrationData = async (req, res) => {
 //###########################  Add Insurance details part optional #####################################
 const saveInsuranceData = async (req, res) => {
   if (!req.body) {
-    return sendErrorResponse(res, "Something went wrong");
+    return res
+      .status(500)
+      .json({ status: "Error", message: "No body!", data:"" });
   }
 
   try {
@@ -196,14 +200,18 @@ const saveInsuranceData = async (req, res) => {
       { new: true }
     );
     if (!insuranceData) {
-      return sendErrorResponse(res, "Something went wrong");
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong!", data:"" });
     }
     return res
       .status(200)
       .json({ status: "Success", message: "Ok", data: insuranceData });
   } catch (err) {
     console.log(err);
-    return sendErrorResponse(res, "Something went wrong");
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong!", data:"" });
   }
 };
 
@@ -211,7 +219,9 @@ const saveInsuranceData = async (req, res) => {
 const saveVehiclePhoto = async (req, res) => {
   console.log(req.files);
   if (!req.files || req.files.length === 0) {
-    return sendErrorResponse(res, "NO files");
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Files not found!", data:"" });
   }
   const imageArray = req.files.map((element) => element.filename);
   try {
@@ -222,15 +232,18 @@ const saveVehiclePhoto = async (req, res) => {
       { new: true }
     );
     if (!vehiclePhoto) {
-      return sendErrorResponse(res, "Something went wrong");
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong!", data:"" });
     }
     return res
       .status(200)
       .json({ status: "Success", message: "Ok", data: vehiclePhoto });
   } catch (err) {
     console.log(err);
-    return sendErrorResponse(res, "Something went wrong");
-  }
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong!", data:"" }); }
 };
 
 //###########################  single vehicle info retrieval #####################################
@@ -239,12 +252,16 @@ const getVehicleInfo = async (req, res) => {
   const user = req.user.userData;
   const vehicleId = req.query.id || user.vehicleId;
   if (!vehicleId) {
-    return sendErrorResponse(res, "Something went wrong");
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Id not found", data:"" });
   }
   try {
     const vehicleInfo = await Vehicle.findOne({ _id: vehicleId });
     if (!vehicleInfo) {
-      return sendErrorResponse(res, "Something went wrong");
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong", data:"" });
     }
     console.log("vehicleInfo", vehicleInfo);
     return res
@@ -253,7 +270,9 @@ const getVehicleInfo = async (req, res) => {
     
   } catch (err) {
     console.log(err);
-    return sendErrorResponse(res, "Something went wrong");
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong", data:"" });
   }
 };
 
@@ -276,24 +295,151 @@ const deleteVehicle = async(req,res)=>{
   }
 }
 
-//*****************************************ADMIN SIDE *************************************************
+const updateVehicle = async(req,res)=>{
+  console.log("body",req.body,"query",req.query)
+  try{
+    if(!req.body || !req.query.id){
+      return res.status(404).json({status:"Error",message:"No body"});
+    }
+    const updatedData = await vehicleModel.findOneAndUpdate({_id:req.query.id},{$set:{brand:req.body.brand,model:req.body.model,year:req.body.year,color:req.body.color}},{new:true});
+    if(!updatedData){
+      return res.status(500).json({status:"Error",message:"Something went wrong"});
+    }
+    return res.status(200).json({status:"Success",message:"Successfully updated"});
 
-//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Full Vehicle data @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-const getFullVehicleList = async (req, res) => {
+  }catch(err){
+    console.log(err);
+    return res.status(500).json({status:"Error",message:"Something went wrong"});
+  }
+}
+
+const updateRegistration = async(req,res)=>{
+  console.log("body",req.body,"query",req.query)
+  try{
+    if(!req.body || !req.query.id){
+      return res.status(404).json({status:"Error",message:"No body"});
+    }
+    const updatedData = await vehicleModel.findOneAndUpdate({_id:req.query.id},{$set:{
+      'registration.registrationNumber': req.body.registrationNumber,
+      'registration.expiryDate':req.body.expiryDate,
+    }},{new:true});
+    if(!updatedData){
+      return res.status(500).json({status:"Error",message:"Something went wrong"});
+    }
+    return res.status(200).json({status:"Success",message:"Successfully updated"});
+
+  }catch(err){
+    console.log(err);
+    return res.status(500).json({status:"Error",message:"Something went wrong"});
+  }
+}
+
+const updateInsurance = async(req,res)=>{
+  console.log("body",req.body,"query",req.query)
+  try{
+    if(!req.body || !req.query.id){
+      return res.status(404).json({status:"Error",message:"No body"});
+    }
+    const updatedData = await vehicleModel.findOneAndUpdate({_id:req.query.id},{$set:{
+      'insurance.insuranceCompany': req.body.insuranceCompany,
+      'insurance.policyNumber':req.body.policyNumber,
+      'insurance.expiryDate':req.body.expiryDate,
+    }},{new:true});
+    if(!updatedData){
+      return res.status(500).json({status:"Error",message:"Something went wrong"});
+    }
+    return res.status(200).json({status:"Success",message:"Successfully updated"});
+
+  }catch(err){
+    console.log(err);
+    return res.status(500).json({status:"Error",message:"Something went wrong"});
+  }
+}
+
+const updateImages = async(req,res)=>{
+  console.log(req.files);
+  if (!req.files || req.files.length === 0) {
+    return res
+    .status(500)
+    .json({ status: "Error", message: "files not found", data: "" });
+  }
+  const imageArray = req.files.map((element) => element.filename);
   try {
-    const vehicleList = await Vehicle.find({});
-    console.log("Vehicle list", vehicleList);
-    if (!vehicleList) {
-      return sendErrorResponse(res, "No data");
+    const updatedVehicle = await Vehicle.findOneAndUpdate(
+      { _id: req.query.id },
+      { $addToSet: { VehiclePhotos: { $each: imageArray } } },
+      { new: true }
+    );
+    if (!updatedVehicle) {
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong", data: "" });
     }
     return res
       .status(200)
-      .json({ status: "Success", message: "OK", data: vehicleList });
+      .json({ status: "Success", message: "Ok", data: updatedVehicle });
   } catch (err) {
     console.log(err);
-    return sendErrorResponse(res, "Something went wrong");
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong", data: "" });
   }
-};
+}
+
+
+const deleteImage = async(req,res)=>{
+  console.log(req.body, req.query.id);
+  if (!req.body || !req.query.id) {
+    return res
+    .status(500)
+    .json({ status: "Error", message: "Data not found", data: "" });
+  }
+  try {
+    const updatedVehicle = await Vehicle.findOneAndUpdate(
+      { _id: req.query.id },
+      { $pull: { VehiclePhotos: req.body.image} },
+      { new: true }
+    );
+    console.log("check",updatedVehicle)
+    if (!updatedVehicle) {
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong", data: "" });
+    }
+    console.log(updatedVehicle)
+    return res
+      .status(200)
+      .json({ status: "Success", message: "Ok", data: updatedVehicle });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong", data: "" });
+  }
+}
+
+const getPages = async(req,res)=>{
+  try{
+    const data = await vehicleModel.find({userId:req.user.userData._id}).count();
+    console.log(data);
+    let pageCount = Math.floor(+data/2);
+    console.log("pages",pageCount);
+    return res
+      .status(200)
+      .json({ page:pageCount });
+  }catch(err){
+    console.log(err);
+    return res
+      .status(500)
+      .json({ page:'1' });
+  }
+}
+
+
+//*****************************************ADMIN SIDE *************************************************
+
+
+
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Single Vehicle data @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 const getSingleVehicleInfo = async (req, res) => {
@@ -384,6 +530,7 @@ const verifyVehicle = async (req, res) => {
   }
 };
 
+
 module.exports = {
   getVehicleList,
   addVehicle,
@@ -393,10 +540,16 @@ module.exports = {
   saveInsuranceData,
   saveVehiclePhoto,
   getVehicleInfo,
-  getFullVehicleList,
+  
   getSingleVehicleInfo,
   blockVehicle,
   unblockVehicle,
   verifyVehicle,
-  deleteVehicle
+  deleteVehicle,
+  updateVehicle,
+  updateRegistration,
+  updateInsurance,
+  updateImages,
+  deleteImage,
+  getPages
 };

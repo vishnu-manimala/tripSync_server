@@ -19,12 +19,14 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true
     },
-    profileImage:{
-        type:String
-    },
+    profileImage:[],
     createdAt:{
         type:Date
     },
+    idName:{
+            type:String,
+    },
+    idPhotos:[],
     updatedAt:{
         type:Date
     },
@@ -45,6 +47,9 @@ const userSchema = new mongoose.Schema({
         default:false
     },
     vehicleCategory:[],
+    licencePhotos:[],
+    following:[],
+    followers:[],
     isAdmin:{
         type:Boolean,
         default:false

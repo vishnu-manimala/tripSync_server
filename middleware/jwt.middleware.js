@@ -6,12 +6,12 @@ const verifyJwt=(req,res,next)=>{
     const token = req.headers.authorization;
     console.log("token middleware",token);
     if(!token){
-        return res.status(401).json({ message: 'Token is missing' })
+        return res.status(401).json({ status: "authorizationError", message: "No token available",data:'' })
     }
     jwt.verify(token,PRIVATE_KEY,(err, decoded) => {
         if (err) {
             console.log(err.message);
-          return res.status(401).json({ message: 'Token is invalid' });
+          return res.json({ status: "authorizationError", message: "Token expired",data:'' });
         }
         req.user = decoded;
          // Store the decoded user information in the request object

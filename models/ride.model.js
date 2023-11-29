@@ -87,6 +87,18 @@ const rideSchema = new mongoose.Schema({
     vehichle_id:{
         type:mongoose.Schema.Types.ObjectId,
         ref:vehicleModel
-    }
+    },
+    rideRequest:[
+        {
+            userId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: userModel
+            },
+            status: {
+                type: String,
+                default: "pending"
+            }
+        }
+    ],
     })
     module.exports = mongoose.model('ride',rideSchema);

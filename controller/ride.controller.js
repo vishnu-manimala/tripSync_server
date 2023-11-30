@@ -477,7 +477,7 @@ const getRide = async (req, res) => {
 };
 
 const rideRequestedUser = async(req,res)=>{
-    console.log(req.body.data);
+    console.log("rideRequestedUser",req.body.data);
     try{
       const dataArray=req.body.data;
       const userIds = dataArray.map(item => item.userId);

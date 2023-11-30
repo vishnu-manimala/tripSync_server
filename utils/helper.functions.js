@@ -25,6 +25,14 @@ const tokenGenerator = async(data)=>{
     return token;
 
 }
+// function generateAccessToken(data) {
+//   return jwt.sign({userData:data}, PRIVATE_KEY, { expiresIn: '15s' });
+// }
+
+//refresh token
+// function generateRefreshToken(data) {
+//   return jwt.sign({userData:data}, PRIVATE_KEY);
+// }
 
 const generateOTP = ()=> {
     const digits = "0123456789";

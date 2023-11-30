@@ -1,3 +1,4 @@
+const rideModel = require("../models/ride.model");
 const userModel = require("../models/user.model");
 const User = require("../models/user.model");
 const vehicleModel = require("../models/vehicle.model");
@@ -173,6 +174,67 @@ const getFullVehicleList = async (req, res) => {
         .json({ page:"" });
     }
   }
+const getRideList = async(req,res)=>{
+    try{
+        const rideData = await rideModel.find({});
+        if(!rideData){
+            return res
+            .status(500)
+            .json({status:"Error",message:"Something went wrong",data:[]})
+        }
+        return res
+        .status(200)
+        .json({status:"Success",message:"OK",data:rideData})
+
+    }catch(err){
+        console.log(err);
+        return res
+                .status(500)
+                .json({status:"Error",message:"Something went wrong",data:[]})
+
+    }
+}
+
+const blockRide = async(req,res)=>{
+    console.log(req.body.id)
+    try{
+        const isBlocked = await rideModel.findByIdAndUpdate(req.body.id,{$set:{isBlocked:true}},{new:true});
+        if(!isBlocked){
+            return res
+            .status(500)
+            .json({status:"Error",message:"Something went wrong"})
+        }
+        return res
+        .status(200)
+        .json({status:"Success",message:"Blocked"})
+
+    }catch(err){
+        console.log(err);
+        return res
+                .status(500)
+                .json({status:"Error",message:"Something went wrong"})
+    }
+}
+const unBlockRide = async(req,res)=>{
+    console.log(req.body.id)
+    try{
+        const isBlocked = await rideModel.findByIdAndUpdate(req.body.id,{$set:{isBlocked:false}},{new:true});
+        if(!isBlocked){
+            return res
+            .status(500)
+            .json({status:"Error",message:"Something went wrong"})
+        }
+        return res
+        .status(200)
+        .json({status:"Success",message:"Blocked"})
+
+    }catch(err){
+        console.log(err);
+        return res
+                .status(500)
+                .json({status:"Error",message:"Something went wrong"})
+    }
+}
 module.exports = {
     getAllUsers,
     verifyUser,
@@ -182,5 +244,8 @@ module.exports = {
     unBlockVehicle,
     blockVehicle,
     getPagesCount,
-    getUserPagesCount
+    getUserPagesCount,
+    getRideList,
+    blockRide,
+    unBlockRide
 }

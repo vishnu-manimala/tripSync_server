@@ -84,6 +84,10 @@ const rideSchema = new mongoose.Schema({
         type:Boolean,
         default:false
     },
+    isBlocked:{
+        type:Boolean,
+        default:false
+    },
     vehichle_id:{
         type:mongoose.Schema.Types.ObjectId,
         ref:vehicleModel

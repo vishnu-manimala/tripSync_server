@@ -16,6 +16,10 @@ admin_route.patch('/block.vehicles',adminController.blockVehicle);
 admin_route.get('/get.pages',adminController.getPagesCount);
 module.exports = admin_route;
 
+//rides
 
+admin_route.get('/getRideList',adminController.getRideList);
+admin_route.patch('/blockRide',adminController.blockRide);
+admin_route.patch('/unBlockRide',adminController.unBlockRide);
 
 

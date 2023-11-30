@@ -112,9 +112,37 @@ const updatePhoto = async(req,res)=>{
               .json({ status: "Error", message: "Something went wrong" });
           }
   }
+
+  const getUserData = async (req,res)=>{
+    console.log(req.user.userData);
+    const user = req.user.userData;
+    if(!user){
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" ,data:""});
+    }
+    try{
+      const userData = await userModel.findById(user._id);
+      if(!userData){
+        return res
+        .status(500)
+        .json({ status: "Error", message: "Something went wrong",data:"" });
+      }
+      return res
+        .status(200)
+        .json({ status: "Success", message: "OK" ,data:userData });
+    }catch(err){
+      console.log(err);
+      return res
+        .status(500)
+        .json({ status: "Error", message: "Something went wrong",data:"" });
+    }
+  
+  }
 module.exports = {
     updateName,
     updatePhoto,
     saveIdPhotos,
-    saveLicensePhotos
+    saveLicensePhotos,
+    getUserData
 }

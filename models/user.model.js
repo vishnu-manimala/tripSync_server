@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema({
     updatedAt:{
         type:Date
     },
+    islicenceVerified:{
+        type:Boolean,
+        default:false
+    },
     isIdVerified:{
         type:Boolean,
         default:false

@@ -3,6 +3,8 @@ const userModel = require("../models/user.model");
 const vehicleModel = require("../models/vehicle.model");
 const SharedFiles = require("../utils/helper.functions");
 const mongoose = require("mongoose");
+const Razorpay = require('razorpay');
+
 
 const publishedRideBasic = async (req, res) => {
   console.log("request body>>>", req.body.data);
@@ -582,6 +584,74 @@ const cancelRequest = async(req,res)=>{
       .json({ status: "Error", message: "Something went wrong"});
   }
 }
+
+const createOrder = async(req,res)=>{
+  console.log("req.body.amount>>")
+  try{
+    const user = req.user.userData;
+    console.log("req.body.amount>>",req.body.amount)
+    const instance = new Razorpay({
+      key_id:"rzp_test_0wPeTmtyc9nQDT",
+      key_secret:"vH3hgvmM5FDh83KoeIwuDrSJ" 
+    })
+    const options = {
+      amount:req.body.amount*100,
+      currency:'INR',
+      receipt:user.email,
+    }
+    instance.orders.create(options, (err, order) => {
+      if (err) {
+        console.error("unexpected",err);
+        return res.status(500).json({ status: "Error", message: "Something went wrong"});
+      }
+      res.status(200).json({ status: "Success", message: "OK",data:order.id});
+    });
+  }catch(err){
+    console.log("crate error>>",err.message)
+   
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong"});
+  }
+}
+
+const savePayment = async(req,res)=>{
+ 
+  try{
+    console.log(req.body)
+    if(!req.body.ride){
+      return res
+    .status(500)
+    .json({ status: "Error", message: "Something went wrong"});
+    }
+    const rideData = req.body.ride;
+    const amount =req.body.amount;
+    const rzpData = req.body.data;
+    const paymentUpdate = await rideModel.findOneAndUpdate(
+                          {'rideRequest.userId':rideData.userID},
+                          {$set:
+                            { 
+                              razorpay_payment_id:rzpData.razorpay_payment_id,
+                              razorpay_order_id:rzpData.razorpay_order_id,
+                              amount:amount,
+                              payedAt:new Date(),
+                              status:"paid"
+                            }
+                          },
+                          {
+                            new:true
+                          }
+                          )
+                          return res
+      .status(200)
+      .json({ status: "Success", message: "payment saved"});
+  }catch(err){
+    console.log("crate error>>",err.message)
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong"});
+  }
+}
 module.exports = {
   getPublishedRide,
   getAllPublishedRides,
@@ -598,5 +668,7 @@ module.exports = {
   rideRequestedUser,
   acceptRequest,
   rejectRequest,
-  cancelRequest
+  cancelRequest,
+  createOrder,
+  savePayment
 };

@@ -22,5 +22,7 @@ ride_route.post('/get.rideRequestedUser',authMiddleware.verifyJwt,isBlockedMiddl
 ride_route.patch('/acceptRequest',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.acceptRequest);
 ride_route.patch('/rejectRequest',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.rejectRequest);
 ride_route.patch('/cancelRequest',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.cancelRequest);
+ride_route.post('/createOrder',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.createOrder);
+ride_route.patch('/savePayment',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.savePayment);
 
 module.exports =  ride_route;

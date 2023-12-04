@@ -57,19 +57,20 @@ const followProfile = async(req,res)=>{
         return res.status(500).json({status:"Error",message:"SOMething went wrong"});
     }
 }
-const followBackProfile = async(req,res)=>{
+const unfollowProfile = async(req,res)=>{
     console.log(req.body.id)
     try{
         if(!req.body.id){
             return res.status(500).json({status:"Error",message:"SOMething went wrong"});
         }
         const user = req.user.userData;
-        const follower = await userModel.findByIdAndUpdate(user._id,{$push:{followers:req.body.id}},{new:true})
-        const following = await userModel.findByIdAndUpdate(req.body.id,{$push:{following:user._id}},{new:true})
-        if(!follower || !following){
+        const following = await userModel.findByIdAndUpdate(user._id,{$pull:{following:req.body.id}},{new:true})
+        const followers = await userModel.findByIdAndUpdate(req.body.id,{$pull:{followers:user._id}},{new:true})
+        if(!followers || !following){
             return res.status(500).json({status:"Error",message:"SOMething went wrong"});
         }
-        
+        console.log("follower>>",followers)
+        console.log("following>>",following)
         return res.status(200).json({status:"Success",message:"OK"});
     }catch(err){
         console.log(err);
@@ -80,5 +81,5 @@ const followBackProfile = async(req,res)=>{
 module.exports = {
     getProfileData,
     followProfile,
-    followBackProfile
+    unfollowProfile
 }

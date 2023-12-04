@@ -18,21 +18,18 @@ const securePassword = async(password)=>{
 }
 
 const tokenGenerator = async(data)=>{
-    console.log(data);
     
-    const token  = jwt.sign({userData:data},PRIVATE_KEY,{expiresIn:'10h'});
-    console.log(token);
+    const token  = jwt.sign({userData:data},PRIVATE_KEY,{expiresIn:'1d'});
+    console.log("token");
     return token;
 
 }
-// function generateAccessToken(data) {
-//   return jwt.sign({userData:data}, PRIVATE_KEY, { expiresIn: '15s' });
-// }
 
-//refresh token
-// function generateRefreshToken(data) {
-//   return jwt.sign({userData:data}, PRIVATE_KEY);
-// }
+const  refreshTokenGenerator = async(data)=>{
+  const refreshToken = jwt.sign({ userData:data }, PRIVATE_KEY, { expiresIn: '30d' });
+  console.log("Refreshtoken");
+  return refreshToken;
+}
 
 const generateOTP = ()=> {
     const digits = "0123456789";
@@ -68,5 +65,6 @@ module.exports = {
     tokenGenerator,
     securePassword,
     generateOTP,
-    sendOtpTOPhone
+    sendOtpTOPhone,
+    refreshTokenGenerator
 }

@@ -101,6 +101,22 @@ const rideSchema = new mongoose.Schema({
             status: {
                 type: String,
                 default: "pending"
+            },
+            razorpay_payment_id:{
+                type: String,
+            },
+            razorpay_order_id:{
+                type: String,
+            },
+            amount:{
+                type:Number,
+                default:0
+            },
+            reuestedAt:{
+                type:Date
+            },
+            payedAt:{
+                type:Date
             }
         }
     ],

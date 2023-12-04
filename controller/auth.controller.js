@@ -7,7 +7,6 @@ const register = async (req, res) => {
   const data = req.body;
   try {
     const securePassword = await helper.securePassword(data.password);
-    console.log("secured pwd", securePassword);
     const userData = await User.create({
       name: data.name,
       email: data.email,
@@ -50,6 +49,7 @@ const passwordLogin = async (req, res) => {
       });
     }
     const token = await helper.tokenGenerator(userData);
+    const refreshToken = await helper.refreshTokenGenerator(userData);
     const userdata = await User.findOne(
       { email: data.username },
       {
@@ -64,7 +64,10 @@ const passwordLogin = async (req, res) => {
         otp:1
       }
     );
-    res.status(200).json({ data: userdata, status: "Success", token: token });
+    res.setHeader('Authorization', `Bearer ${token}`)
+    .cookie('refreshToken', refreshToken, {secure: true, httpOnly: true })
+    .status(200)
+    .json({ data: userdata, status: "Success", token: token,refreshToken:refreshToken });
   } catch (err) {
     console.log(err);
     res

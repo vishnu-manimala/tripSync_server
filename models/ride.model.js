@@ -104,15 +104,17 @@ const rideSchema = new mongoose.Schema({
             },
             razorpay_payment_id:{
                 type: String,
+                default:""
             },
             razorpay_order_id:{
                 type: String,
+                default:""
             },
             amount:{
                 type:Number,
                 default:0
             },
-            reuestedAt:{
+            requestedAt:{
                 type:Date
             },
             payedAt:{

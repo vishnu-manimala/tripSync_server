@@ -16,13 +16,17 @@ ride_route.post('/saveRideRPayments',authMiddleware.verifyJwt,isBlockedMiddlewar
 ride_route.post('/getSearchedRide',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.getSearchedRide);
 ride_route.get('/get.pages',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.getPages);
 ride_route.patch('/requestRide',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.requestRide);
-ride_route.patch('/cancelRideRequest',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.cancelRideRequest);
+ride_route.patch('/cancelRideRequest',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.cancelRequest);
 ride_route.get('/getRide',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.getRide);
 ride_route.post('/get.rideRequestedUser',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.rideRequestedUser);
 ride_route.patch('/acceptRequest',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.acceptRequest);
 ride_route.patch('/rejectRequest',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.rejectRequest);
-ride_route.patch('/cancelRequest',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.cancelRequest);
+ride_route.patch('/cancelRequest',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.cancelRideRequest);
 ride_route.post('/createOrder',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.createOrder);
 ride_route.patch('/savePayment',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.savePayment);
+
+
+
+ride_route.get('/getRideData',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.getRideData);
 
 module.exports =  ride_route;

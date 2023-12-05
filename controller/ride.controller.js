@@ -3,8 +3,7 @@ const userModel = require("../models/user.model");
 const vehicleModel = require("../models/vehicle.model");
 const SharedFiles = require("../utils/helper.functions");
 const mongoose = require("mongoose");
-const Razorpay = require('razorpay');
-
+const Razorpay = require("razorpay");
 
 const publishedRideBasic = async (req, res) => {
   console.log("request body>>>", req.body.data);
@@ -17,14 +16,6 @@ const publishedRideBasic = async (req, res) => {
     const data = req.body.data;
     const user = req.user.userData;
     console.log("user>>", user);
-    // const createRide = await rideModel({
-    //   user_id: user._id,
-    //   origin: req.body.data.origin,
-    //   destination: req.body.data.destination,
-    //   departure_date: req.body.data.date,
-    //   departure_time: req.body.data.time,
-    //   available_seats: req.body.data.seats,
-    // });
     const latO = data.origin["geometry"]["location"]["lat"];
 
     const createRide = await rideModel({
@@ -40,14 +31,12 @@ const publishedRideBasic = async (req, res) => {
     const ride = await createRide.save();
     console.log("ride>>", ride);
     if (!ride) {
-      return res
-        .status(500)
-        .json({
-          status: "Error",
-          message: "Something went wrong",
-          data: "",
-          token: "",
-        });
+      return res.status(500).json({
+        status: "Error",
+        message: "Something went wrong",
+        data: "",
+        token: "",
+      });
     }
     user.rideId = ride._id;
     console.log(user.rideId);
@@ -61,14 +50,12 @@ const publishedRideBasic = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    return res
-      .status(500)
-      .json({
-        status: "Error",
-        message: "Something went wrong",
-        data: "",
-        token: "",
-      });
+    return res.status(500).json({
+      status: "Error",
+      message: "Something went wrong",
+      data: "",
+      token: "",
+    });
   }
 };
 
@@ -209,7 +196,7 @@ const getAllPublishedRides = async (req, res) => {
     const skip = 2 * (page - 1);
     const publishedRides = await rideModel
       .find({ user_id: user._id })
-      .sort({departure_date:-1})
+      .sort({ departure_date: -1 })
       .limit(limit)
       .skip(skip);
     console.log("publishedRides>>", publishedRides);
@@ -317,13 +304,11 @@ const getSearchedRide = async (req, res) => {
     console.log("searchdata>>", searchdata);
 
     if (!searchdata) {
-      return res
-        .status(500)
-        .json({
-          status: "No rides Available",
-          message: "Nothing found",
-          data: "",
-        });
+      return res.status(500).json({
+        status: "No rides Available",
+        message: "Nothing found",
+        data: "",
+      });
     }
     //console.log(searchdata)
     return res
@@ -353,7 +338,7 @@ const getPages = async (req, res) => {
 };
 
 const requestRide = async (req, res) => {
-  // console.log("request>>",req.body)
+  console.log("request>>",req.body)
   try {
     if (!req.body) {
       return res
@@ -361,15 +346,28 @@ const requestRide = async (req, res) => {
         .json({ status: "Error", message: "Something went wrong" });
     }
     const user = req.user.userData;
-    const request = {
-      userId: user._id,
-      status: "requested",
-    };
-    const rideRequest = await rideModel.findByIdAndUpdate(
-      req.body.rideId,
-      { $push: { rideRequest: request } },
-      { new: true }
-    );
+    let rideRequest;
+    if(req.body.requestId){
+
+      rideRequest = await rideModel.findOneAndUpdate(
+        { "rideRequest._id": req.body.requestId },
+        { $set: { "rideRequest.$.status": "requested" } },
+        { new: true }
+      );
+
+    }else{
+      const request = {
+        userId: user._id,
+        status: "requested",
+      };
+
+      rideRequest = await rideModel.findByIdAndUpdate(
+        req.body.rideId,
+        { $push: { rideRequest: request } },
+        { new: true }
+      );
+    }
+   
     if (!rideRequest) {
       return res
         .status(500)
@@ -386,31 +384,33 @@ const requestRide = async (req, res) => {
 };
 
 const cancelRideRequest = async (req, res) => {
-  console.log("request>>",req.body)
-    if (!req.body) {
+  console.log("request>>", req.body);
+  console.log("what")
+  if (!req.body) {
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" });
+  }
+  const user = req.user.userData;
+  try {
+    const updatedRide = await rideModel.findByIdAndUpdate(
+      req.body.rideId,
+      { $pull: { rideRequest: { _id: req.body.requestId } } },
+      { new: true }
+    );
+    if (!updatedRide) {
       return res
         .status(500)
         .json({ status: "Error", message: "Something went wrong" });
     }
-    const user = req.user.userData;
-    try{
-      const updatedRide = await rideModel.findByIdAndUpdate(
-        req.body.rideId,
-        { $pull: { rideRequest: { _id: req.body.requestId } } },
-        { new: true });
-        if(!updatedRide){
-          return res
-          .status(500)
-          .json({ status: "Error", message: "Something went wrong" });
-        }
-      console.log('Ride updated successfully:', updatedRide);
-      return res.status(200).json({ status: "Success", message: "updated" });
-    }catch(err){
-      console.error('Error updating ride:', err);
-      return res
+    console.log("Ride updated successfully:", updatedRide);
+    return res.status(200).json({ status: "Success", message: "updated" });
+  } catch (err) {
+    console.error("Error updating ride:", err);
+    return res
       .status(500)
       .json({ status: "Error", message: "Something went wrong" });
-    }
+  }
 };
 
 const getRide = async (req, res) => {
@@ -459,13 +459,11 @@ const getRide = async (req, res) => {
     ]);
     console.log("searchdata", searchdata);
     if (!searchdata) {
-      return res
-        .status(500)
-        .json({
-          status: "No rides Available",
-          message: "Nothing found",
-          data: "",
-        });
+      return res.status(500).json({
+        status: "No rides Available",
+        message: "Nothing found",
+        data: "",
+      });
     }
     return res
       .status(200)
@@ -478,180 +476,268 @@ const getRide = async (req, res) => {
   }
 };
 
-const rideRequestedUser = async(req,res)=>{
-    console.log("rideRequestedUser",req.body.data);
-    try{
-      const dataArray=req.body.data;
-      const userIds = dataArray.map(item => item.userId);
-      console.log("userIds",userIds);
-      const userData = await userModel.find({ _id: { $in: userIds } });
-      const resultArray = dataArray.map(item => ({
-        ...item,
-        userData: userData.find(user => user._id.toString() === item.userId.toString())
-      }));
-      console.log("resultArray",resultArray);
-      return res
-      .status(200)
-      .json({ status: "Success", message: "Ok",userData:resultArray });
-    }catch(err){
-      console.log(err);
-      return res
-      .status(500)
-      .json({ status: "Error", message: "Something went wrong",userData:[] });
-  
-    }
-}
-
-
-const acceptRequest = async(req,res)=>{
-  console.log(req.body)
-  if(!req.body.id){
+const rideRequestedUser = async (req, res) => {
+  console.log("rideRequestedUser", req.body.data);
+  try {
+    const dataArray = req.body.data;
+    const userIds = dataArray.map((item) => item.userId);
+    console.log("userIds", userIds);
+    const userData = await userModel.find({ _id: { $in: userIds } });
+    const resultArray = dataArray.map((item) => ({
+      ...item,
+      userData: userData.find(
+        (user) => user._id.toString() === item.userId.toString()
+      ),
+    }));
+    console.log("resultArray", resultArray);
     return res
-    .status(500)
-    .json({ status: "Error", message: "Something went wrong"});
-  }
-  try{
-    const acceptedReq = await rideModel.findOneAndUpdate({'rideRequest._id':req.body.id}, { $set: { 'rideRequest.$.status': "accepted" } },
-    { new: true })
-    console.log("acceptedReq",acceptedReq)
-    if(!acceptedReq){
-      return res
-      .status(500)
-      .json({ status: "Error", message: "Something went wrong"});
-      }
-      return res
       .status(200)
-      .json({ status: "Success", message: "ok" });
-      
-  }catch(err){
-    console.log(err)
-    
-      return res
-      .status(500)
-      .json({ status: "Error", message: "Something went wrong"});
-    }
-}
-const rejectRequest = async(req,res)=>
-{
-  console.log(req.body)
-  if(!req.body.id){
+      .json({ status: "Success", message: "Ok", userData: resultArray });
+  } catch (err) {
+    console.log(err);
     return res
-    .status(500)
-    .json({ status: "Error", message: "Something went wrong",userData:[] });
-  }
-  try{
-    const rejectReq = await rideModel.findOneAndUpdate({'rideRequest._id':req.body.id}, { $set: { 'rideRequest.$.status': "rejected" } },
-    { new: true })
-    if(!rejectReq){
-      return res
       .status(500)
-      .json({ status: "Error", message: "Something went wrong"});
-      }
-      return res
-      .status(200)
-      .json({ status: "Success", message: "ok" });
-  }catch(err){
-    console.log(err)
-   
-      return res
+      .json({ status: "Error", message: "Something went wrong", userData: [] });
+  }
+};
+
+const acceptRequest = async (req, res) => {
+  console.log(req.body);
+  if (!req.body.id) {
+    return res
       .status(500)
       .json({ status: "Error", message: "Something went wrong" });
   }
-}
-const cancelRequest = async(req,res)=>{
-  console.log(req.body)
-  if(!req.body.id){
-    return res
-    .status(500)
-    .json({ status: "Error", message: "Something went wrong" });
-  }
-  try{
-    const cancelReq = await rideModel.findOneAndUpdate({'rideRequest._id':req.body.id}, { $set: { 'rideRequest.$.status': "cancelled" } },
-    { new: true })
-    if(!cancelReq){
+  try {
+    const acceptedReq = await rideModel.findOneAndUpdate(
+      { "rideRequest._id": req.body.id },
+      { $set: { "rideRequest.$.status": "accepted" } },
+      { new: true }
+    );
+   // console.log("acceptedReq", acceptedReq);
+    if (!acceptedReq) {
       return res
-      .status(500)
-      .json({ status: "Error", message: "Something went wrong"});
-      }
-      return res
-      .status(200)
-      .json({ status: "Success", message: "ok" });
-  }catch(err){
-    console.log(err)
-   
-      return res
-      .status(500)
-      .json({ status: "Error", message: "Something went wrong"});
-  }
-}
-
-const createOrder = async(req,res)=>{
-  console.log("req.body.amount>>")
-  try{
-    const user = req.user.userData;
-    console.log("req.body.amount>>",req.body.amount)
-    const instance = new Razorpay({
-      key_id:"rzp_test_0wPeTmtyc9nQDT",
-      key_secret:"vH3hgvmM5FDh83KoeIwuDrSJ" 
-    })
-    const options = {
-      amount:req.body.amount*100,
-      currency:'INR',
-      receipt:user.email,
+        .status(500)
+        .json({ status: "Error", message: "Something went wrong"});
     }
+    //const data = acceptedReq.rideRequest.filter(item=>item._id.toString() === req.body.id.toString())
+    console.log("data>>>>",acceptedReq.rideRequest)
+    return res.status(200).json({ status: "Success", message: "ok" ,data:acceptedReq.rideRequest });
+  } catch (err) {
+    console.log(err);
+
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" });
+  }
+};
+const rejectRequest = async (req, res) => {
+  console.log(req.body);
+  if (!req.body.id) {
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong", userData: [] });
+  }
+  try {
+    const rejectReq = await rideModel.findOneAndUpdate(
+      { "rideRequest._id": req.body.id },
+      { $set: { "rideRequest.$.status": "rejected" } },
+      { new: true }
+    );
+    if (!rejectReq) {
+      return res
+        .status(500)
+        .json({ status: "Error", message: "Something went wrong" });
+    }
+    return res.status(200).json({ status: "Success", message: "ok" ,data:rejectReq.rideRequest});
+  } catch (err) {
+    console.log(err);
+
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" });
+  }
+};
+const cancelRequest = async (req, res) => {
+  console.log("cancel>>",req.body);
+  if (!req.body) {
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" });
+  }
+  try {
+    let cancelReq;
+    console.log("in paid")
+    switch (req.body.action) {
+      case 'paid':
+      console.log("in paid")
+        cancelReq = await rideModel.findOneAndUpdate(
+          { "rideRequest._id": req.body.requestId },
+          { $set: { "rideRequest.$.status": "payment returned" } },
+          { new: true }
+        );
+        break;
+      case 'cancel':
+        cancelReq = await rideModel.findOneAndUpdate(
+          { "rideRequest._id": req.body.requestId },
+          { $set: { "rideRequest.$.status": "cancelled" } },
+          { new: true }
+        );
+        break;
+      default:cancelReq = "";
+                break;
+    }
+    //  cancelReq = await rideModel.findOneAndUpdate(
+    //   { "rideRequest._id": req.body.id },
+    //   { $pull: { rideRequest: { _id: req.body.id } } },
+    //   { new: true }
+    // );
+    if (!cancelReq) {
+      return res
+        .status(500)
+        .json({ status: "Error", message: "Something went wrong" });
+    }
+    return res.status(200).json({ status: "Success", message: "ok" ,data:cancelReq.rideRequest});
+  } catch (err) {
+    console.log(err);
+
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" });
+  }
+};
+
+const createOrder = async (req, res) => {
+  console.log("req.body.amount>>");
+  try {
+    const user = req.user.userData;
+    console.log("req.body.amount>>", req.body.amount);
+    const instance = new Razorpay({
+      key_id: "rzp_test_0wPeTmtyc9nQDT",
+      key_secret: "vH3hgvmM5FDh83KoeIwuDrSJ",
+    });
+    const options = {
+      amount: req.body.amount * 100,
+      currency: "INR",
+      receipt: user.email,
+    };
     instance.orders.create(options, (err, order) => {
       if (err) {
-        console.error("unexpected",err);
-        return res.status(500).json({ status: "Error", message: "Something went wrong"});
+        console.error("unexpected", err);
+        return res
+          .status(500)
+          .json({ status: "Error", message: "Something went wrong" });
       }
-      res.status(200).json({ status: "Success", message: "OK",data:order.id});
+      res
+        .status(200)
+        .json({ status: "Success", message: "OK", data: order.id });
     });
-  }catch(err){
-    console.log("crate error>>",err.message)
-   
-      return res
-      .status(500)
-      .json({ status: "Error", message: "Something went wrong"});
-  }
-}
+  } catch (err) {
+    console.log("crate error>>", err.message);
 
-const savePayment = async(req,res)=>{
- 
-  try{
-    console.log(req.body)
-    if(!req.body.ride){
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" });
+  }
+};
+
+const savePayment = async (req, res) => {
+  try {
+    console.log(req.body);
+    if (!req.body.ride) {
       return res
-    .status(500)
-    .json({ status: "Error", message: "Something went wrong"});
+        .status(500)
+        .json({ status: "Error", message: "Something went wrong" });
     }
     const rideData = req.body.ride;
-    const amount =req.body.amount;
+    const amount = req.body.amount;
     const rzpData = req.body.data;
     const paymentUpdate = await rideModel.findOneAndUpdate(
-                          {'rideRequest.userId':rideData.userID},
-                          {$set:
-                            { 
-                              razorpay_payment_id:rzpData.razorpay_payment_id,
-                              razorpay_order_id:rzpData.razorpay_order_id,
-                              amount:amount,
-                              payedAt:new Date(),
-                              status:"paid"
-                            }
-                          },
-                          {
-                            new:true
-                          }
-                          )
-                          return res
+      { "rideRequest._id": rideData.rideID },
+      {
+        $set: {
+          "rideRequest.$.razorpay_payment_id": rzpData.razorpay_payment_id,
+          "rideRequest.$.razorpay_order_id": rzpData.razorpay_order_id,
+          "rideRequest.$.amount": amount,
+          "rideRequest.$.payedAt": new Date(),
+          "rideRequest.$.status": "paid",
+        },
+      },
+      {
+        new: true,
+      }
+    );
+    console.log("crate error>>", paymentUpdate);
+    return res
       .status(200)
-      .json({ status: "Success", message: "payment saved"});
-  }catch(err){
-    console.log("crate error>>",err.message)
-      return res
+      .json({ status: "Success", message: "payment saved" });
+  } catch (err) {
+    console.log("crate error>>", err.message);
+    return res
       .status(500)
-      .json({ status: "Error", message: "Something went wrong"});
+      .json({ status: "Error", message: "Something went wrong" });
   }
-}
+};
+
+const getRideData = async (req, res) => {
+  try {
+    const page = req.query.page;
+    const limit = 5;
+    const skip = 2 * (page - 1);
+    const user = req.user.userData;
+    const rides = await rideModel.aggregate([
+      {
+        $match: {
+          "rideRequest.userId": new mongoose.Types.ObjectId(user._id),
+        },
+      },
+      {
+        $lookup: {
+          from: "vehicles", // Assuming the collection name is 'vehicles'
+          localField: "vehichle_id",
+          foreignField: "_id",
+          as: "vehicleDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$vehicleDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "users", // Assuming the collection name is 'users'
+          localField: "vehicleDetails.userId",
+          foreignField: "_id",
+          as: "vehicleDetails.userDetails",
+        },
+      },
+      {
+        $unwind: {
+          path: "$vehicleDetails.userDetails",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+    ]);
+  
+    if (!rides) {
+      return res
+        .status(500)
+        .json({ status: "Error", message: "Something went wrong" });
+    }
+    console.log(">>>>>>>>>>>>>>>>>>>", rides);
+    return res
+      .status(200)
+      .json({ status: "Success", message: "OK", data: rides });
+    // console.log("userRides>>>>>>>>>>>>>>>>>>>>>>",userRides)
+  } catch (err) {
+    console.log("crate error>>", err);
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" });
+  }
+};
 module.exports = {
   getPublishedRide,
   getAllPublishedRides,
@@ -670,5 +756,6 @@ module.exports = {
   rejectRequest,
   cancelRequest,
   createOrder,
-  savePayment
+  savePayment,
+  getRideData,
 };

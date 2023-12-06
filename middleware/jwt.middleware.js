@@ -7,13 +7,13 @@ const verifyJwt=async(req,res,next)=>{
     const token = req.headers.authorization;
     console.log("token middleware",token);
     if(!token){
-        return res.status(401).json({ status: "authorizationError", message: "No token provided",data:'' })
+        return res.status(400).json({ status: "authorizationError", message: "No token provided",data:'' })
     }
     jwt.verify(token,PRIVATE_KEY,async (err, decoded) => {
         if (err) {
             console.log("middleware",err.message);
            // await verifyRefreshToken(req,res,next);
-          return res.status(400).json({ status: "authorizationError", message: "Token expired",data:'' });
+          return res.status(401).json({ status: "authorizationError", message: "Token expired",data:'' });
         }
         req.user = decoded;
         next();

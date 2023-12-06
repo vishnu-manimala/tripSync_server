@@ -1,41 +1,66 @@
-// const socketIo = require('socket.io');
+const chatRooms =  require('../models/chat.model')
 
-function initializeChatModule(io) {
-  // const io = require('socket.io')(server,{
-  //   cors:{
-  //       origin:'*'
-  //   }
-  //   })
-  
+ function initializeChatModule(io) {
+  let count;
     io.on('connection', (socket) => {
       console.log('A user connected');
 
-      socket.on('join', (userId) => {
-        socket.join(userId);
-        console.log(`${socket.id} joined chat room for user ${userId}`);
-      });
-      socket.on('save-message', (data) => {
-        console.log(data);
-        io.emit('new-message', { message: data });        
-    });
-    
-      socket.on('chat message', async ({ sender, receiver, message }) => {
-        // Save the message to the database
-        try {
-          const newChatMessage = new Chat({ sender, receiver, message });
-          await newChatMessage.save();
-  
-          // Broadcast the message to the sender and receiver
-          socket.broadcast.to(receiver).emit(`chat message-${receiver}`, { sender, message });
-          io.to(socket.id).emit(`chat message-${sender}`, { receiver, message });
-        } catch (error) {
-          console.error('Error saving chat message to the database:', error);
+      socket.on('join', async(data) => {
+        socket.join(data.room);
+        try{
+          const rooms = await chatRooms.find({})
+          count = 0;
+          rooms.forEach((room) => {
+            if(room.name === data.room){
+              count++;
+            }
+          });
+          if(count === 0){
+            chatRooms.insertMany({name:data.room,messages:[]});
+          }
+        }catch(err){
+          console.log(err);
+          return false;
         }
+        //  .toArray((err,rooms)=>{
+        //     if(err){
+        //       console.log(err);
+        //       return false;
+        //     }
+          // count = 0;
+          // rooms.forEach((room) => {
+          //   if(room.name === data.room){
+          //     count++;
+          //   }
+          // });
+          // if(count === 0){
+          //   chatRooms.insertMany({name:data.room,messages:[]});
+          // }
+       // });
       });
-  
-      socket.on('disconnect', () => {
-        console.log('User disconnected');
-      });
+      
+    
+    //  socket.on('message',(data)=>{
+    //   io.in(data.room).emit('new message',{user:data.user,message:data.message});
+    //   chatRooms.updateOne({name:data.room},{$push: { messages: { user: data.user, message: data.message } }},(err,res)=>{
+    //     if(err){
+    //       console.log(err);
+    //       return false;
+    //     }
+    //   });
+    //  });
+    socket.on('message', async (data) => {
+      try {
+        await io.in(data.room).emit('new message', { user: data.user, message: data.message });
+        await chatRooms.updateOne({ name: data.room }, { $push: { messages: { user: data.user, message: data.message } } });
+      } catch (err) {
+        console.error(err);
+      }
+    });
+     
+     socket.on('typing',(data)=>{
+      socket.broadcast.in(data.room).emit('typing',{data:data,isTyping:true});
+     });
     });
   }
   

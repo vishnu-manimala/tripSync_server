@@ -1,6 +1,20 @@
 const User = require("../models/user.model");
 const helper = require("../utils/helper.functions");
 const bcrypt = require("bcrypt");
+const jwtModel = require("../models/jwt.model")
+const chatRooms =  require('../models/chat.model')
+
+
+const chatRoom = async(req,res)=>{
+  let room = req.query.room;
+  const chat = await chatRooms.find({name: room})
+  
+  console.log("chat",chat )
+  if(chat.length<1){
+    return res.json("")
+  }
+  res.json(chat[0].messages);
+}
 
 //register
 const register = async (req, res) => {
@@ -50,24 +64,19 @@ const passwordLogin = async (req, res) => {
     }
     const token = await helper.tokenGenerator(userData);
     const refreshToken = await helper.refreshTokenGenerator(userData);
+    const jwt = await jwtModel.create({
+      userId:userData._id,
+      token:refreshToken,
+      createdAt:new Date() 
+    });
+    const refresh = jwt.save();
     const userdata = await User.findOne(
-      { email: data.username },
-      {
-        name: 1,
-        contactNumber: 1,
-        email: 1,
-        isIdVerified: 1,
-        isPhoneVerified: 1,
-        ownsVehicle: 1,
-        isAdmin: 1,
-        isBlocked: 1,
-        otp:1
-      }
+      { email: data.username }
     );
     res.setHeader('Authorization', `Bearer ${token}`)
-    .cookie('refreshToken', refreshToken, {secure: true, httpOnly: true })
+    .cookie('token', token, { httpOnly: true})
     .status(200)
-    .json({ data: userdata, status: "Success", token: token,refreshToken:refreshToken });
+    .json({ data: userdata, status: "Success", token: token });
   } catch (err) {
     console.log(err);
     res
@@ -122,18 +131,7 @@ const authOtp = async (req, res) => {
   }
   try {
     const userData = await User.findOne(
-      { contactNumber: req.body.phone },
-      {
-        name: 1,
-        contactNumber: 1,
-        email: 1,
-        isIdVerified: 1,
-        isPhoneVerified: 1,
-        ownsVehicle: 1,
-        isAdmin: 1,
-        isBlocked: 1,
-        otp:1
-      }
+      { contactNumber: req.body.phone }
     );
     if (!userData) {
       return res
@@ -211,4 +209,5 @@ module.exports = {
   sendOtp,
   authOtp,
   resetPassword,
+  chatRoom
 };

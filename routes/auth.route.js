@@ -10,6 +10,6 @@ auth_route.post('/send_otp',authController.sendOtp);
 auth_route.post('/verify_otp',authController.authOtp);
 auth_route.post('/reset_password',authController.resetPassword);
 
-
+auth_route.get('/chatroom',authController.chatRoom)
 
 module.exports = auth_route;

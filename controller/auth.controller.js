@@ -62,7 +62,7 @@ const passwordLogin = async (req, res) => {
         message: "Username & password mismatch",
       });
     }
-    const token = await helper.tokenGenerator(userData);
+    const accessToken = await helper.tokenGenerator(userData);
     const refreshToken = await helper.refreshTokenGenerator(userData);
     const jwt = await jwtModel.create({
       userId:userData._id,
@@ -73,10 +73,13 @@ const passwordLogin = async (req, res) => {
     const userdata = await User.findOne(
       { email: data.username }
     );
-    res.setHeader('Authorization', `Bearer ${token}`)
-    .cookie('token', token, { httpOnly: true})
+    res.header('Authorization', `Bearer ${accessToken}`)
+
+    // Set the access token and refresh token in cookies
+    .cookie('access_token', accessToken, { httpOnly: true,  })
+    .cookie('refresh_token', refreshToken,  { httpOnly: true, })
     .status(200)
-    .json({ data: userdata, status: "Success", token: token });
+    .json({ data: userdata, status: "Success", token: accessToken,refresh_token:refreshToken });
   } catch (err) {
     console.log(err);
     res

@@ -5,27 +5,22 @@ connect();
 require('dotenv').config();
 const http = require('http').createServer(app);
 http.listen(3002);
-//const socket = require('socket.io');
-// const io = require('socket.io')(http,{
-// cors:{
-//     origin:'*'
-// }
-// })
+
 
 const cors = require('cors');
-app.use(cors());
-// app.use(cors({
-//     origin: 'http://localhost:4200',
-//     credentials: true
-//   }));
+const cookieParser = require('cookie-parser');
+// app.use(cors());
 
-//   app.use((req, res, next) => {
-//     res.append('Access-Control-Allow-Origin' , 'http://localhost:4200');
-//     res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,PATCH,DELETE');
-//     res.append("Access-Control-Allow-Headers", "Origin, Accept,Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
-//     res.append('Access-Control-Allow-Credentials', true);
-//     next();
-// });
+const corsOptions = {
+  origin: 'http://localhost:4200',
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+app.use(cookieParser());
+
+
 
 const { initializeChatModule } = require('./utils/chatModule')
 

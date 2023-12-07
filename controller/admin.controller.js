@@ -101,19 +101,7 @@ const getAllUsers = async (req,res)=>{
         const page = +req.query.id;
         const limit = 10;
         const skip = 10*(page-1);   
-        const usersData = await User.find({},{ 
-            name :1,
-            email:1,
-            contactNumber:1,
-            profileImage:1,
-            createdAt:1,
-            isIdVerified:1,
-            isPhoneVerified:1,
-            isEmailVerified:1,
-            isAdmin:1,
-            isBlocked:1,
-            _id:1
-        }).limit(limit).skip(skip).sort({createdAt:-1});
+        const usersData = await User.find({}).limit(limit).skip(skip).sort({createdAt:-1});
         if(!usersData){
             return res.status(400).json({status:"Error", message:"Something went wrong",data:''})
         }

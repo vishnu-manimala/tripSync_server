@@ -82,7 +82,7 @@ const updatePhoto = async(req,res)=>{
   }
 
   const saveLicensePhotos = async(req,res)=>{
-    console.log(req.files);
+    console.log("license",req.files);
     if (!req.files || req.files.length === 0 ) {
         return res
         .status(500)

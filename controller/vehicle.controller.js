@@ -420,7 +420,7 @@ const deleteImage = async(req,res)=>{
 
 const getPages = async(req,res)=>{
   try{
-    const data = await vehicleModel.find({userId:req.user.userData._id}).count();
+    const data = await vehicleModel.find({userId:req.user.userData._id,isBlocked:false}).count();
     console.log(data);
     let pageCount = Math.floor(+data/2);
     console.log("pages",pageCount);

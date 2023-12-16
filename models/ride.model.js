@@ -92,6 +92,11 @@ const rideSchema = new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:vehicleModel
     },
+    likes:{
+        type:Number,
+        default:0
+    },
+    likedUsers:[],
     rideRequest:[
         {
             userId: {

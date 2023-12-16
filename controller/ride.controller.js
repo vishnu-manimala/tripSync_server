@@ -2,6 +2,7 @@ const rideModel = require("../models/ride.model");
 const userModel = require("../models/user.model");
 const vehicleModel = require("../models/vehicle.model");
 const SharedFiles = require("../utils/helper.functions");
+const reviewModel = require('../models/review.model')
 const mongoose = require("mongoose");
 const Razorpay = require("razorpay");
 
@@ -457,7 +458,8 @@ const getRide = async (req, res) => {
         },
       },
     ]);
-    console.log("searchdata", searchdata);
+   
+     console.log("searchdata", searchdata);
     if (!searchdata) {
       return res.status(500).json({
         status: "No rides Available",
@@ -465,9 +467,59 @@ const getRide = async (req, res) => {
         data: "",
       });
     }
+
+    //reviewData
+    const reviewData = await reviewModel.find({rideId:rideId});
+    //userData
+    let userId = new Array();
+    reviewData.forEach(item=>{
+      if(!userId.includes(item.userId.toString())){
+        userId.push(item.userId.toString());
+      }
+      item.reply.forEach(reply=>{
+        if(!userId.includes(reply.userId.toString())){
+          userId.push(reply.userId.toString())
+        }
+      })
+    })
+    console.log("userId>>",userId)
+    //get userdata using userIds
+    const userData = await userModel.find({_id: { $in: userId }})
+    let reviewSet = new Array();
+    reviewData.forEach(review=>{
+      let reviewInfo= {}
+      const user = userData.find(user=>user._id.toString() === review.userId.toString())
+      reviewInfo.rideId = review.rideId;
+      reviewInfo._id = review._id;
+      reviewInfo.userId = review.userId;
+      reviewInfo.message = review.message;
+      reviewInfo.likes = review.likes;
+      reviewInfo.createdAt = review.createdAt;
+      reviewInfo.isLiked = review.isLiked;
+      reviewInfo.username = user.name;
+      reviewInfo.likedUsers = review.likedUsers;
+      reviewInfo.profileImage = user.profileImage[user.profileImage.length-1];
+      reviewInfo.reply = new Array();
+      review.reply.forEach(comment=>{
+        const userDetails = userData.find(user=>user._id.toString() === comment.userId.toString());
+        const replyList = {
+          replyId:comment._id,
+          replyComment : comment.message,
+          replyUserName: user.name,
+          replyProfileImage:user.profileImage[user.profileImage.length-1],
+          replyUserId:comment.userId,
+          replyLikes:comment.likes,
+          replyCreatedAt:comment.createdAt,
+          likedUsers:comment.likedUsers
+        }
+        reviewInfo.reply.push(replyList);
+      })
+      reviewSet.push(reviewInfo);
+    })
+    console.log("reviewSet",reviewSet);
     return res
       .status(200)
-      .json({ status: "Success", message: "Ok", data: searchdata });
+      .json({ status: "Success", message: "Ok", data: searchdata,review:reviewSet });
   } catch (err) {
     console.log(err);
     return res
@@ -738,6 +790,44 @@ const getRideData = async (req, res) => {
       .json({ status: "Error", message: "Something went wrong" });
   }
 };
+
+const rideLike = async(req,res)=>{
+  console.log("rideLike>>",req.body)
+  try{
+    if(!req.body){
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" });
+    }
+    const ride = await rideModel.findOne( {_id:req.body.rideId})
+    let liked;
+    if(ride.likedUsers.includes(req.body.userId)){
+      liked = await rideModel.findOneAndUpdate(
+        {_id:req.body.rideId},
+        { $pull: { likedUsers: req.body.userId },
+        $inc: { likes: -1 }})
+    }else{
+      liked = await rideModel.findOneAndUpdate(
+        {_id:req.body.rideId},
+        { $push: { likedUsers: req.body.userId },
+        $inc: { likes: 1 }})
+    }
+    if(!liked){
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" });
+    }
+    return res
+    .status(200)
+    .json({ status: "Success", message: "OK" });
+  }catch(err){
+    console.log(err);
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" });
+
+  }
+}
 module.exports = {
   getPublishedRide,
   getAllPublishedRides,
@@ -758,4 +848,5 @@ module.exports = {
   createOrder,
   savePayment,
   getRideData,
+  rideLike
 };

@@ -2,6 +2,7 @@ const rideModel = require("../models/ride.model");
 const userModel = require("../models/user.model");
 const User = require("../models/user.model");
 const vehicleModel = require("../models/vehicle.model");
+const reviewModel = require('../models/review.model')
 const Vehicle = require('../models/vehicle.model')
 
 const getPages = async(req,res)=>{
@@ -18,6 +19,10 @@ const getPages = async(req,res)=>{
                 break;
             case 'ride':
                 data = await rideModel.countDocuments({});
+                console.log("ridepage:",data)
+                break;
+            case 'review':
+                data = await reviewModel.countDocuments({});
                 console.log("ridepage:",data)
                 break;
             default:
@@ -366,6 +371,129 @@ const unBlockRide = async(req,res)=>{
                 .json({status:"Error",message:"Something went wrong"})
     }
 }
+
+const getHomeData = async(req,res)=>{
+    const user =  req.user.usersData;
+    const userId = user._id; 
+
+const userRidesPipeline = [
+    {
+        $match: { userId: mongoose.Types.ObjectId(userId) }
+    },
+    {
+        $project: {
+            _id: 1,
+            userId: 1,
+           
+        }
+    }
+];
+
+const followingRidesPipeline = [
+    {
+        $match: { userId: { $in: [mongoose.Types.ObjectId(userId), ...user.following] } }
+    },
+    {
+        $project: {
+            _id: 1,
+            userId: 1,
+          
+        }
+    }
+];
+
+const allRidesPipeline = [
+    {
+        $facet: {
+            userRides: userRidesPipeline,
+            followingRides: followingRidesPipeline
+        }
+    },
+    {
+        $project: {
+            allRides: {
+                $concatArrays: ['$userRides', '$followingRides']
+            }
+        }
+    },
+    {
+        $unwind: '$allRides'
+    },
+    {
+        $replaceRoot: { newRoot: '$allRides' }
+    }
+];
+
+const result = await Ride.aggregate(allRidesPipeline);
+
+console.log("result",result);
+}
+
+const getReviews = async(req,res)=>{
+    try{
+        const page = +req.query.id;
+        const limit = 10;
+        const skip = 10*(page-1);
+        
+        const reviewData = await reviewModel.find(
+            {})
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .skip(skip);
+        let userId = new Array();
+        if(!reviewData){
+            return res.status(500).json({ status: "Error", message: "Something went wrong!!" })
+        }
+        reviewData.forEach(item=>{
+          if(!userId.includes(item.userId.toString())){
+            userId.push(item.userId.toString());
+          }
+          item.reply.forEach(reply=>{
+            if(!userId.includes(reply.userId.toString())){
+              userId.push(reply.userId.toString())
+            }
+          })
+        })
+        console.log("userId>>",userId)
+        const userData = await userModel.find({_id: { $in: userId }})
+        let reviewSet = new Array();
+        reviewData.forEach(review=>{
+          let reviewInfo= {}
+          const user = userData.find(user=>user._id.toString() === review.userId.toString())
+          reviewInfo.rideId = review.rideId;
+          reviewInfo._id = review._id;
+          reviewInfo.userId = review.userId;
+          reviewInfo.message = review.message;
+          reviewInfo.likes = review.likes;
+          reviewInfo.createdAt = review.createdAt;
+          reviewInfo.isLiked = review.isLiked;
+          reviewInfo.username = user.name;
+          reviewInfo.likedUsers = review.likedUsers;
+          reviewInfo.profileImage = user.profileImage[user.profileImage.length-1];
+          reviewInfo.reply = new Array();
+          review.reply.forEach(comment=>{
+            const userDetails = userData.find(user=>user._id.toString() === comment.userId.toString());
+            const replyList = {
+              replyId:comment._id,
+              replyComment : comment.message,
+              replyUserName: user.name,
+              replyProfileImage:user.profileImage[user.profileImage.length-1],
+              replyUserId:comment.userId,
+              replyLikes:comment.likes,
+              replyCreatedAt:comment.createdAt,
+              likedUsers:comment.likedUsers
+            }
+            reviewInfo.reply.push(replyList);
+          })
+          reviewSet.push(reviewInfo);
+        })
+        return res.status(200).json({ status: "Success", message: "Ok",data: reviewSet})
+    }catch(err){
+        console.log(err);
+        return res.status(500).json({ status: "Error", message: "Something went wrong!!" })
+    }
+}
+
 module.exports = {
     getAdminData,
     getAllUsers,
@@ -382,5 +510,7 @@ module.exports = {
     unBlockRide,
     getPages,
     verifyVehicle,
-    verifyCredential
+    verifyCredential,
+    getHomeData,
+    getReviews
 }

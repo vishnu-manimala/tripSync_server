@@ -33,5 +33,10 @@ admin_route.get('/getRideList',adminController.getRideList);
 admin_route.patch('/blockRide',adminController.blockRide);
 admin_route.patch('/unBlockRide',adminController.unBlockRide);
 
+//home
+admin_route.get('/getHomeData',adminController.getHomeData);
+
+//review
+admin_route.get('/getReviews',adminController.getReviews);
 
 module.exports = admin_route;

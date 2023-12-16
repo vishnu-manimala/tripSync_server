@@ -28,5 +28,5 @@ ride_route.patch('/savePayment',authMiddleware.verifyJwt,isBlockedMiddleware.isB
 
 
 ride_route.get('/getRideData',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.getRideData);
-
+ride_route.patch('/rideLike',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.rideLike);
 module.exports =  ride_route;

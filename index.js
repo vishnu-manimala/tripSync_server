@@ -39,14 +39,15 @@ const adminRoute =require('./routes/admin.route');
 const rideRoute = require('./routes/ride.route');
 const profileRoute = require('./routes/profile.route');
 const accountRoute = require('./routes/account.route');
-
+const reviewRoutes = require('./routes/review.routes')
 //routing
 app.use("/auth",authRoute)//for login,register
 app.use('/vehicle',vehicleRoute);//for vehicle routes
 app.use('/admin',adminRoute);//for admin requests
 app.use('/ride',rideRoute);//for rides
 app.use('/profile',profileRoute);//for rides
-app.use('/accounts',accountRoute)
+app.use('/accounts',accountRoute);
+app.use('/review',reviewRoutes);
 
  const server = app.listen(port,()=>{
     console.log(`server running at http://localhost:3001`);
@@ -57,4 +58,5 @@ const io = require('socket.io')(server, {
             methods: ['GET', 'POST'],
   },
 });
+
 initializeChatModule(io);

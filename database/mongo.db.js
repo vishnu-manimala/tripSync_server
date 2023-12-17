@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
-const url = process.env.DB_URL
+const url = process.env.DB_ATLAS_URL
 module.exports = async(req, res)=>{
     
     try{
@@ -10,7 +10,7 @@ module.exports = async(req, res)=>{
             useUnifiedTopology: true,
         }).then(()=>{
            
-            console.log("Server connected to database...");
+            console.log("Server connected to database...",url);
         }).catch((err)=>{
             console.log(err)
         })

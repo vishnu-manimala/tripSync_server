@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const path = require('path')
 const connect = require('./database/mongo.db');
 connect();
 require('dotenv').config();
@@ -25,6 +26,8 @@ app.use(cookieParser());
 const { initializeChatModule } = require('./utils/chatModule')
 
 const port = process.env.PORT;
+const nodeEnv = process.env.NODE_ENV;
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -49,7 +52,21 @@ app.use('/profile',profileRoute);//for rides
 app.use('/accounts',accountRoute);
 app.use('/review',reviewRoutes);
 
+if(nodeEnv === 'PRODUCTION'){
+  const __dirname= path.resolve();
+  app.use(express.static(path.join(__dirname,'/frontend/dist/client')));
+  app.get('*',(req,res)=>{
+    res.sendFile(path.resolve(__dirname,'frontend','dist','client','index.html'))
+  });
+}else{
+  app.get('/',(req,res)=>{
+    res.send('API is running...')
+  })
+}
+
+
  const server = app.listen(port,()=>{
+ 
     console.log(`server running at http://localhost:3001`);
 })
 const io = require('socket.io')(server, {

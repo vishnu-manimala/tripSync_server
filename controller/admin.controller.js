@@ -92,7 +92,26 @@ const getAdminData = async(req,res)=>{
         }
         console.log("newUsers",newUsers)
         console.log("adminData",adminData)
-        return res.status(200).json({status:"Success",message:"OK",data:adminData})
+        const result = await userModel.aggregate([
+            {
+              $project: {
+                month: { $month: "$createdAt" }
+              }
+            },
+            {
+              $group: {
+                _id: "$month",
+                count: { $sum: 1 }
+              }
+            },
+            {
+              $sort: {
+                _id: 1
+              }
+            }
+          ]);
+          console.log("result>>",result)
+        return res.status(200).json({status:"Success",message:"OK",data:adminData,userchart:result})
     }catch(err)
     {
         console.log(err)

@@ -21,7 +21,8 @@ const userSchema = new mongoose.Schema({
     },
     profileImage:[],
     createdAt:{
-        type:Date
+        type:Date,
+        default:Date.now
     },
     idName:{
             type:String,

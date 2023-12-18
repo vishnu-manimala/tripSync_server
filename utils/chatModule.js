@@ -22,33 +22,9 @@ const chatRooms =  require('../models/chat.model')
           console.log(err);
           return false;
         }
-        //  .toArray((err,rooms)=>{
-        //     if(err){
-        //       console.log(err);
-        //       return false;
-        //     }
-          // count = 0;
-          // rooms.forEach((room) => {
-          //   if(room.name === data.room){
-          //     count++;
-          //   }
-          // });
-          // if(count === 0){
-          //   chatRooms.insertMany({name:data.room,messages:[]});
-          // }
-       // });
+       
       });
       
-    
-    //  socket.on('message',(data)=>{
-    //   io.in(data.room).emit('new message',{user:data.user,message:data.message});
-    //   chatRooms.updateOne({name:data.room},{$push: { messages: { user: data.user, message: data.message } }},(err,res)=>{
-    //     if(err){
-    //       console.log(err);
-    //       return false;
-    //     }
-    //   });
-    //  });
     socket.on('message', async (data) => {
       try {
         await io.in(data.room).emit('new message', { user: data.user, message: data.message });

@@ -276,6 +276,33 @@ const getVehicleInfo = async (req, res) => {
   }
 };
 
+const getVehicles = async(req,res)=>{
+  const user = req.user.userData;
+  
+  if (!user) {
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Id not found", data:"" });
+  }
+  try {
+    const vehicleInfo = await Vehicle.find({ userId: user._id, isBlocked:false });
+    if (!vehicleInfo) {
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong", data:"" });
+    }
+    console.log("vehicleInfo", vehicleInfo);
+    return res
+      .status(200)
+      .json({ status: "Success", message: "OK", data: vehicleInfo });
+    
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong", data:"" });
+  }
+}
 const deleteVehicle = async(req,res)=>{
   console.log(req.query);
   if(!req.query.id){
@@ -551,5 +578,6 @@ module.exports = {
   updateInsurance,
   updateImages,
   deleteImage,
-  getPages
+  getPages,
+  getVehicles
 };

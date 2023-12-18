@@ -33,8 +33,8 @@ const storage = multer.diskStorage({
   vehicle_route.patch('/update.image',jwtAuth.verifyJwt,isBlockedMiddleware.isBlocked, upload.array('files'),vehicleController.updateImages);
   vehicle_route.post('/delete.image',jwtAuth.verifyJwt,isBlockedMiddleware.isBlocked, upload.array('files'),vehicleController.deleteImage);
   vehicle_route.get('/get.pages',jwtAuth.verifyJwt,isBlockedMiddleware.isBlocked,vehicleController.getPages);
-
-
+  
+  vehicle_route.get('/getVehicles',jwtAuth.verifyJwt,isBlockedMiddleware.isBlocked,vehicleController.getVehicles);
   //@@@@@@@@@@@@@@@@@@@@@@@ Admin @@@@@@@@@@@@@@@@@@@@@@@
  
   vehicle_route.get('/get.vehicle.list',jwtAuth.verifyJwt,vehicleController.getSingleVehicleInfo);

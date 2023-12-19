@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 const url = process.env.DB_ATLAS_URL
+//const url = process.env.DB_URL_LOCAL
 module.exports = async(req, res)=>{
     
     try{

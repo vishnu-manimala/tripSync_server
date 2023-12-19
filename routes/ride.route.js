@@ -25,6 +25,8 @@ ride_route.patch('/cancelRequest',authMiddleware.verifyJwt,isBlockedMiddleware.i
 ride_route.post('/createOrder',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.createOrder);
 ride_route.patch('/savePayment',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.savePayment);
 
+ride_route.delete('/deleteUnfinishedRide',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.deleteRide);
+ride_route.patch('/deleteRide',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.softDelete);
 
 
 ride_route.get('/getRideData',authMiddleware.verifyJwt,isBlockedMiddleware.isBlocked,publishedRides.getRideData);

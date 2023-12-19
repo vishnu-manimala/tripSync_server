@@ -41,6 +41,6 @@ const storage = multer.diskStorage({
   vehicle_route.get('/block.vehicle',jwtAuth.verifyJwt,vehicleController.blockVehicle);
   vehicle_route.get('/unBlock.vehicle',jwtAuth.verifyJwt,vehicleController.unblockVehicle);
   vehicle_route.get('/verify.vehicle',jwtAuth.verifyJwt,vehicleController.verifyVehicle);
-
+  vehicle_route.delete('/cancelPublishing',jwtAuth.verifyJwt,vehicleController.cancelPublishing);
 
 module.exports = vehicle_route;

@@ -557,6 +557,27 @@ const verifyVehicle = async (req, res) => {
   }
 };
 
+const cancelPublishing = async(req,res)=>{
+  try{
+    const user = req.user.userData;
+    const cancelledvehicle = await vehicleModel.findByIdAndDelete(user.vehicleId);
+    if(!cancelledvehicle){
+      return res
+      .status(500)
+      .json({ status:"Error", message:"SOmething went wrong" });
+    }
+    return res
+    .status(200)
+    .json({ status:"Success", message:"ok" });
+
+  }catch(err){
+    console.log(err);
+    return res
+      .status(500)
+      .json({ status:"Error", message:"SOmething went wrong" });
+  }
+
+}
 
 module.exports = {
   getVehicleList,
@@ -579,5 +600,6 @@ module.exports = {
   updateImages,
   deleteImage,
   getPages,
-  getVehicles
+  getVehicles,
+  cancelPublishing
 };

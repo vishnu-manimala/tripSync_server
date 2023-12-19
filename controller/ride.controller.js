@@ -196,7 +196,7 @@ const getAllPublishedRides = async (req, res) => {
     const limit = 3;
     const skip = 2 * (page - 1);
     const publishedRides = await rideModel
-      .find({ user_id: user._id })
+      .find({ user_id: user._id, isBlocked:false })
       .sort({ departure_date: -1 })
       .limit(limit)
       .skip(skip);
@@ -326,7 +326,7 @@ const getSearchedRide = async (req, res) => {
 const getPages = async (req, res) => {
   try {
     const data = await rideModel
-      .find({ user_id: req.user.userData._id })
+      .find({ user_id: req.user.userData._id, isBlocked:false })
       .count();
     // console.log("count",data);
     let pageCount = Math.ceil(+data / 2);
@@ -399,6 +399,7 @@ const cancelRideRequest = async (req, res) => {
       { $pull: { rideRequest: { _id: req.body.requestId } } },
       { new: true }
     );
+    console.log("updatedRide>>",updatedRide)
     if (!updatedRide) {
       return res
         .status(500)
@@ -828,6 +829,53 @@ const rideLike = async(req,res)=>{
 
   }
 }
+
+const deleteRide = async(req,res)=>{
+  try{
+    const user = req.user.userData;
+    
+    const deletedRide = await rideModel.findByIdAndDelete(user.rideId);
+    if (deletedRide) {
+      console.log('Ride deleted successfully:', deletedRide);
+      return res
+      .status(200)
+      .json({ status: "Success", message: "Ok" });
+    } else {
+      console.log('Ride not found with ID:',rideId);
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" });
+    }
+  }catch(err){
+    console.log(err);
+    return res
+    .status(500)
+    .json({ status: "Error", message: "Something went wrong" });
+  }
+}
+
+const softDelete = async(req,res)=>{
+  try{
+    console.log("in soft delete")
+    const deletedRide = await rideModel.findByIdAndUpdate(req.query.id,{$set:{isBlocked:true}});
+    if (deletedRide) {
+      console.log('Ride deleted successfully:', deletedRide);
+      return res
+      .status(200)
+      .json({ status: "Success", message: "Ok" });
+    } else {
+      console.log('Ride not found with ID:',rideId);
+      return res
+      .status(500)
+      .json({ status: "Error", message: "Something went wrong" });
+    }
+  }catch(err){
+    console.log(err);
+    return res
+    .status(500)
+    .json({ status: "Error", message: "Something went wrong" });
+  }
+}
 module.exports = {
   getPublishedRide,
   getAllPublishedRides,
@@ -848,5 +896,7 @@ module.exports = {
   createOrder,
   savePayment,
   getRideData,
-  rideLike
+  rideLike,
+  deleteRide,
+  softDelete
 };

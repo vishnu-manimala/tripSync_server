@@ -191,6 +191,7 @@ const deleteReview = async(req,res)=>{
       .status(500)
       .json({ status: "Error", message: "Something went wrong!" });
     }
+    console.log("deletedReview>>",deletedReview)
     return res
   .status(200)
   .json({ status: "Success", message: "Ok" }); 

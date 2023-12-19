@@ -470,7 +470,7 @@ const getRide = async (req, res) => {
     }
 
     //reviewData
-    const reviewData = await reviewModel.find({rideId:rideId});
+    const reviewData = await reviewModel.find({rideId:rideId}).sort({createdAt:-1});
     //userData
     let userId = new Array();
     reviewData.forEach(item=>{
@@ -501,13 +501,15 @@ const getRide = async (req, res) => {
       reviewInfo.likedUsers = review.likedUsers;
       reviewInfo.profileImage = user.profileImage[user.profileImage.length-1];
       reviewInfo.reply = new Array();
-      review.reply.forEach(comment=>{
+      const replyArray = review.reply.sort((a, b) => b.createdAt - a.createdAt);
+      replyArray.forEach(comment=>{
         const userDetails = userData.find(user=>user._id.toString() === comment.userId.toString());
+        console.log("userDetails>>",userDetails)
         const replyList = {
           replyId:comment._id,
           replyComment : comment.message,
-          replyUserName: user.name,
-          replyProfileImage:user.profileImage[user.profileImage.length-1],
+          replyUserName: userDetails.name,
+          replyProfileImage:userDetails.profileImage[userDetails.profileImage.length-1],
           replyUserId:comment.userId,
           replyLikes:comment.likes,
           replyCreatedAt:comment.createdAt,

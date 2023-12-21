@@ -17,14 +17,12 @@ const publishedRideBasic = async (req, res) => {
     const data = req.body.data;
     const user = req.user.userData;
     console.log("user>>", user);
-    const latO = data.origin["geometry"]["location"]["lat"];
+   
 
     const createRide = await rideModel({
       user_id: user._id,
       origin: data.origin.name,
       destination: data.destination.name,
-      originLocation: data.originLocation,
-      destinationLocation: data.destinationLocation,
       departure_date: data.date,
       departure_time: data.time,
       available_seats: data.seats,

@@ -44,6 +44,9 @@ const profileRoute = require('./routes/profile.route');
 const accountRoute = require('./routes/account.route');
 const reviewRoutes = require('./routes/review.routes')
 //routing
+  app.get('/',(req,res)=>{
+    res.send('API is running...')
+  })
 app.use("/auth",authRoute)//for login,register
 app.use('/vehicle',vehicleRoute);//for vehicle routes
 app.use('/admin',adminRoute);//for admin requests
@@ -52,17 +55,17 @@ app.use('/profile',profileRoute);//for rides
 app.use('/accounts',accountRoute);
 app.use('/review',reviewRoutes);
 
-if(nodeEnv === 'PRODUCTION'){
-  const __dirname= path.resolve();
-  app.use(express.static(path.join(__dirname,'/frontend/dist/client')));
-  app.get('*',(req,res)=>{
-    res.sendFile(path.resolve(__dirname,'frontend','dist','client','index.html'))
-  });
-}else{
-  app.get('/',(req,res)=>{
-    res.send('API is running...')
-  })
-}
+// if(nodeEnv === 'PRODUCTION'){
+//   const __dirname= path.resolve();
+//   app.use(express.static(path.join(__dirname,'/frontend/dist/client')));
+//   app.get('*',(req,res)=>{
+//     res.sendFile(path.resolve(__dirname,'frontend','dist','client','index.html'))
+//   });
+// }else{
+//   app.get('/',(req,res)=>{
+//     res.send('API is running...')
+//   })
+// }
 
 
  const server = app.listen(port,()=>{
